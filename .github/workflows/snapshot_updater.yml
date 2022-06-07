@@ -1,0 +1,23 @@
+name: Snapshot Updater
+
+on:
+  repository_dispatch:
+    types: update_snapshots
+
+jobs:
+  generate_snapshots:
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.SNAPSHOT_PUSH_TOKEN }}
+      - name: generate
+        run: |
+          sed -i '' s/\"\"/\"${{ github.event.client_payload.sha }}\"/ Package.swift
+          Automation/generate_snapshots.sh
+      - name: upload
+        run: |
+            git config --global user.name "Mobile Automation"
+            git config --global user.email "mobile.automation@kiwi.com"
+            git commit -m "Updated snapshots for ${{ github.event.client_payload.sha }}."
+            git push
